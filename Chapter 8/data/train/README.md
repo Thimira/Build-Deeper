@@ -1,0 +1,1 @@
+Place your training images here, divided into sub-directories of the classes.
