@@ -6,9 +6,7 @@ from keras import applications
 from keras.utils.np_utils import to_categorical
 import matplotlib.pyplot as plt
 import math
-from keras.models import load_model
 import cv2
-from keras.optimizers import SGD
 
 # dimensions of our images.
 img_width, img_height = 224, 224
@@ -27,17 +25,15 @@ def save_bottlebeck_features():
     # build the VGG16 network
     model = applications.VGG16(include_top=False, weights='imagenet')
 
-    # model = applications.InceptionV3(include_top=False, weights='imagenet')
+    ### save the bottleneck features for the training data ###
 
     datagen_train = ImageDataGenerator(
-                            rescale=1. / 255,
-                            rotation_range=40,
-                            shear_range=0.2,
-                            zoom_range=0.2,
-                            horizontal_flip=True,
-                            fill_mode='nearest')
-
-    datagen = ImageDataGenerator(rescale=1. / 255)
+        rescale=1. / 255,
+        rotation_range=40,
+        shear_range=0.2,
+        zoom_range=0.2,
+        horizontal_flip=True,
+        fill_mode='nearest')
 
     generator = datagen_train.flow_from_directory(
         train_data_dir,
@@ -51,16 +47,20 @@ def save_bottlebeck_features():
     print(len(generator.class_indices))
 
     nb_train_samples = len(generator.filenames)
-    num_classes = len(generator.class_indices)
 
     predict_size_train = int(math.ceil(nb_train_samples / batch_size))
 
     bottleneck_features_train = model.predict_generator(
         generator, predict_size_train)
 
-    np.save('data/models/bottleneck_features_train.npy', bottleneck_features_train)
+    np.save('data/models/bottleneck_features_train.npy',
+            bottleneck_features_train)
 
-    generator = datagen.flow_from_directory(
+    ### save the bottleneck features for the validation data ###
+
+    datagen_validation = ImageDataGenerator(rescale=1. / 255)
+
+    generator = datagen_validation.flow_from_directory(
         validation_data_dir,
         target_size=(img_width, img_height),
         batch_size=batch_size,
@@ -69,55 +69,49 @@ def save_bottlebeck_features():
 
     nb_validation_samples = len(generator.filenames)
 
-    predict_size_validation = int(math.ceil(nb_validation_samples / batch_size))
+    predict_size_validation = int(
+        math.ceil(nb_validation_samples / batch_size))
 
     bottleneck_features_validation = model.predict_generator(
         generator, predict_size_validation)
 
-    np.save('data/models/bottleneck_features_validation.npy', bottleneck_features_validation)
+    np.save('data/models/bottleneck_features_validation.npy',
+            bottleneck_features_validation)
 
 
 def train_top_model():
+    # use a data generator to load the labels for the training and validation data
     datagen_top = ImageDataGenerator(rescale=1./255)
     generator_top = datagen_top.flow_from_directory(
-            train_data_dir,
-            target_size=(img_width, img_height),
-            batch_size=batch_size,
-            class_mode='categorical',
-            shuffle=False)
-    # print(generator_top.filenames)
-    # print(generator_top.classes)
+        train_data_dir,
+        target_size=(img_width, img_height),
+        batch_size=batch_size,
+        class_mode='categorical',
+        shuffle=False)
 
-    # print(len(generator_top.filenames))
-    # print(len(generator_top.classes))
-
-    nb_train_samples = len(generator_top.filenames)
     num_classes = len(generator_top.class_indices)
 
+    # save the class indices for use in the predictions
     np.save('data/models/class_indices.npy', generator_top.class_indices)
 
-    # load the bottleneck features saved earlier
+    # load the bottleneck features for the train data saved earlier
     train_data = np.load('data/models/bottleneck_features_train.npy')
 
-    # get the class lebels for the training data, in the original order
+    # get the class labels for the training data, in the original order
     train_labels = generator_top.classes
 
     # https://github.com/fchollet/keras/issues/3467
     # convert the training labels to categorical vectors
     train_labels = to_categorical(train_labels, num_classes=num_classes)
 
-    # print(train_labels)
-    # print(train_data.shape)
-
     generator_top = datagen_top.flow_from_directory(
-            validation_data_dir,
-            target_size=(img_width, img_height),
-            batch_size=batch_size,
-            class_mode=None,
-            shuffle=False)
+        validation_data_dir,
+        target_size=(img_width, img_height),
+        batch_size=batch_size,
+        class_mode='categorical',
+        shuffle=False)
 
-    nb_validation_samples = len(generator_top.filenames)
-
+    # load the bottleneck features for the validation data saved earlier
     validation_data = np.load('data/models/bottleneck_features_validation.npy')
 
     validation_labels = generator_top.classes
@@ -129,23 +123,15 @@ def train_top_model():
     model.add(Dropout(0.5))
     model.add(Dense(num_classes, activation='softmax'))
 
-    # opt = SGD(lr=0.0005)
     model.compile(optimizer='rmsprop',
                   loss='categorical_crossentropy', metrics=['accuracy'])
-    # model.compile(optimizer=opt,
-    #               loss='categorical_crossentropy', metrics=['accuracy'])
-    # model.compile(optimizer='adam',
-    #               loss='categorical_crossentropy', metrics=['accuracy'])
 
     history = model.fit(train_data, train_labels,
-              epochs=epochs,
-              batch_size=batch_size,
-              validation_data=(validation_data, validation_labels))
+                        epochs=epochs,
+                        batch_size=batch_size,
+                        validation_data=(validation_data, validation_labels))
 
     model.save_weights(top_model_weights_path)
-
-    ######## Save the entire model to file ########
-    #  model.save('my_model.h5')
 
     (eval_loss, eval_accuracy) = model.evaluate(
         validation_data, validation_labels, batch_size=batch_size, verbose=1)
@@ -182,31 +168,25 @@ def train_top_model():
     plt.legend(['train', 'test'], loc='upper left')
     plt.show()
 
+
 def predict():
     class_dictionary = np.load('data/models/class_indices.npy').item()
 
     num_classes = len(class_dictionary)
 
-    # image_path = 'data/validation/Cotton Pygmy Goose/Cotton Pygmy Goose (2).jpg'
-    # image_path = 'data/eval/Cotton_Pygmy_Goose.jpg'
-    # image_path = 'data/eval/Great_Cormorant.jpg'
-    # image_path = 'data/eval/Lesser_Whistling_Duck.jpg'
-    image_path = 'data/eval/00000596.jpg'
+    print("[INFO] loading and preprocessing image...")
+    image_path = 'data/eval/00000520.jpg'
 
     orig = cv2.imread(image_path)
-
-    print("[INFO] loading and preprocessing image...")
-    image = load_img(image_path, target_size=(224, 224))
+    image = load_img(image_path, target_size=(img_width, img_height))
     image = img_to_array(image)
 
     # important! otherwise the predictions will be '0'
-    image = image / 255
+    image = image / 255.0
 
-    # print(image.shape)
-
+    # add a new axis to make the image array confirm with
+    # the (samples, height, width, depth) structure
     image = np.expand_dims(image, axis=0)
-
-    # print(image.shape)
 
     # build the VGG16 network
     model = applications.VGG16(include_top=False, weights='imagenet')
@@ -214,79 +194,46 @@ def predict():
     # get the bottleneck prediction from the pre-trained VGG16 model
     bottleneck_prediction = model.predict(image)
 
-    # print(bottleneck_prediction)
-
     # build top model
     model = Sequential()
     model.add(Flatten(input_shape=bottleneck_prediction.shape[1:]))
     model.add(Dense(512, activation='relu'))
     model.add(Dropout(0.5))
-    model.add(Dense(num_classes, activation='sigmoid'))
+    model.add(Dense(num_classes, activation='softmax'))
 
     model.load_weights(top_model_weights_path)
-
-    ######## If the entire model is loaded from file ########
-    # model = load_model('my_model.h5')
 
     # use the bottleneck prediction on the top model to get the final classification
     class_predicted = model.predict_classes(bottleneck_prediction)
 
+    # get the probabilities for the prediction
     probabilities = model.predict_proba(bottleneck_prediction)
-
-    # print(probabilities.argmax(axis=1))
-    # print(probabilities[0, probabilities.argmax(axis=1)])
-
-    # print(probabilities)
 
     prediction_probability = probabilities[0, probabilities.argmax(axis=1)][0]
 
     inID = class_predicted[0]
 
-    # print(class_dictionary)
+    # invert the class dictionary in order to get the label for the id
     inv_map = {v: k for k, v in class_dictionary.items()}
-    # print(inv_map)
-
     label = inv_map[inID]
 
-    # display the predictions to our screen
-    print("Image ID: {}, Label: {}, Confidence: {}".format(inID, label, prediction_probability))
+    # display the prediction in the console
+    print("Image ID: {}, Label: {}, Confidence: {}".format(
+        inID, label, prediction_probability))
 
-    plot_prediction_probabilities(probabilities, inv_map)
-
-    # display the predictions to our screen
-    cv2.putText(orig, "Predicted: {}".format(label), (10, 30), cv2.FONT_HERSHEY_PLAIN, 1.5, (43, 99, 255), 2)
-    # cv2.putText(orig, "Confidence: {:.5f}".format(prediction_probability), (10, 60), cv2.FONT_HERSHEY_PLAIN, 1.5, (43, 99, 255), 2)
+    # display the prediction in OpenCV window
+    cv2.putText(orig, "Predicted: {}".format(label), (10, 50),
+                cv2.FONT_HERSHEY_PLAIN, 3, (43, 99, 255), 3, cv2.LINE_AA)
 
     cv2.imshow("Classification", orig)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-def plot_prediction_probabilities(probabilities, label_map, top = 3):
-    results = []
-    for pred in probabilities:
-        top_indices = pred.argsort()[-top:][::-1]
-        result = [(label_map[i],) + (pred[i],) for i in top_indices]
-        results.append(result)
 
-    # print(results)
-
-    plt.figure()
-    order = list(reversed(range(len(results[0]))))
-    bar_preds = [pr[1] for pr in results[0]]
-
-    labels = (pr[0] for pr in results[0])
-    # labels = (label_map[i] for i in list(range(len(results[0]))))
-
-    plt.barh(order, bar_preds, alpha=0.5)
-    plt.yticks(order, labels)
-    plt.xlabel('Probability')
-    # plt.xlim(0, 1.01)
-    plt.tight_layout()
-    plt.show()
-
-save_bottlebeck_features()
-train_top_model()
-# predict()
+### Uncomment as necessary
+# save_bottlebeck_features()
+# train_top_model()
+predict()
 
 
 cv2.destroyAllWindows()
