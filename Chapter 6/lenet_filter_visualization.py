@@ -18,6 +18,7 @@ from keras.layers.core import Flatten
 from keras.layers.core import Dense
 
 from keras.optimizers import SGD
+
 # dimensions of the generated pictures for each filter.
 img_width = 28
 img_height = 28
@@ -59,7 +60,6 @@ def build_lenet(width, height, depth, classes, weightsPath=None):
 
 
 # util function to convert a tensor into a valid image
-
 def deprocess_image(x):
     # normalize tensor: center on 0., ensure std is 0.1
     x -= x.mean()
@@ -82,6 +82,10 @@ model = build_lenet(width=28, height=28, depth=1, classes=10, weightsPath="data/
 
 print('Model loaded.')
 
+# get the summary of the model
+model.summary()
+
+# we remove the fully-connected layers from the model
 model.layers.pop()
 model.layers.pop()
 model.layers.pop()
@@ -91,7 +95,7 @@ model.layers.pop()
 opt = SGD(lr=0.01)
 model.compile(loss="categorical_crossentropy", optimizer=opt, metrics=["accuracy"])
 
-# get the summary of the model, in order to get the layer names
+# get the summary of the model again, in order to get the layer names
 model.summary()
 
 # this is the placeholder for the input images
@@ -100,8 +104,8 @@ input_img = model.input
 # get the symbolic outputs of each "key" layer (we gave them unique names).
 layer_dict = dict([(layer.name, layer) for layer in model.layers[1:]])
 
+# utility function to normalize a tensor by its L2 norm
 def normalize(x):
-    # utility function to normalize a tensor by its L2 norm
     return x / (K.sqrt(K.mean(K.square(x))) + 1e-5)
 
 
@@ -153,16 +157,16 @@ for filter_index in range(0, 50):
     end_time = time.time()
     print('Filter %d processed in %ds' % (filter_index, end_time - start_time))
 
-# we will stich the best 64 filters on a 8 x 8 grid.
+# we will stich the best 36 filters on a 6 x 6 grid.
 n = 6
 
 # the filters that have the highest loss are assumed to be better-looking.
-# we will only keep the top 64 filters.
+# we will only keep the top 36 filters.
 kept_filters.sort(key=lambda x: x[1], reverse=True)
 kept_filters = kept_filters[:n * n]
 
 # build a black picture with enough space for
-# our 8 x 8 filters of size 128 x 128, with a 5px margin in between
+# our 8 x 8 filters of size 28 x 28, with a 5px margin in between
 margin = 5
 width = n * img_width + (n - 1) * margin
 height = n * img_height + (n - 1) * margin

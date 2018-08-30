@@ -6,7 +6,6 @@ from keras import backend as K
 import matplotlib.pyplot as plt
 import math
 
-
 # dimensions of our images.
 img_width, img_height = 224, 224
 
@@ -84,7 +83,6 @@ model.add(Activation('softmax'))
 model.compile(loss='categorical_crossentropy',
               optimizer='rmsprop',
               metrics=['accuracy'])
-
 
 history = model.fit_generator(
     train_generator,
