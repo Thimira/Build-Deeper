@@ -3,13 +3,13 @@
 # Train the model and save the model weights
 # python lenet_mnist_keras.py --train-model 1 --save-trained 1
 #
-# Train the model and save the model wights to a give directory
+# Train the model and save the model weights to a give directory
 # python lenet_mnist_keras.py --train-model 1 --save-trained 1 --weights data/lenet_weights.hdf5
 #
-# Evaluate the model from pre-trained model wights
+# Evaluate the model from pre-trained model weights
 # python lenet_mnist_keras.py
 #
-# Evaluate the model from pre-trained model wights from a give directory
+# Evaluate the model from pre-trained model weights from a give directory
 # python lenet_mnist_keras.py --weights data/lenet_weights.hdf5
 
 # import the necessary packages
