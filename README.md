@@ -1,6 +1,6 @@
 # Build Deeper: The Path to Deep Learning - Sample Code
 
-This is the sample code repository for the book **[Build Deeper: The Path to Deep Learning](https://www.amazon.com/dp/1549681060)**.
+This is the sample code repository for the book **[Build Deeper: The Path to Deep Learning](https://www.amazon.com/dp/1793223017)**.
 
 ![Build Deeper](images/build-deeper.jpg)
 
@@ -13,7 +13,17 @@ This repository contains the code examples discussed the following chapters of t
   - Chapter 9 : Bonus – Getting Started with Computer Vision
 
 ### Buy the book
-  - [Amazon.com](https://www.amazon.com/dp/1549681060)
+## Paperback
+  - [Amazon.com](https://www.amazon.com/dp/1793223017)
+  - [Amazon.co.uk](https://www.amazon.co.uk/dp/1793223017)
+  - [Amazon.de](https://www.amazon.de/dp/1793223017)
+  - [Amazon.fr](https://www.amazon.fr/dp/1793223017)
+  - [Amazon.es](https://www.amazon.es/dp/1793223017)
+  - [Amazon.it](https://www.amazon.it/dp/1793223017)
+  - [Amazon.co.jp](https://www.amazon.co.jp/dp/1793223017)
+
+## Kindle eBook
+  - [Amazon.com](https://www.amazon.com/dp/B07MY5Y643)
 
 ### Website
 [**Codes of Interest**](https://www.codesofinterest.com/)
