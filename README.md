@@ -13,7 +13,7 @@ This repository contains the code examples discussed the following chapters of t
   - Chapter 9 : Bonus – Getting Started with Computer Vision
 
 ### Buy the book
-## Paperback
+#### Paperback
   - [Amazon.com](https://www.amazon.com/dp/1793223017)
   - [Amazon.co.uk](https://www.amazon.co.uk/dp/1793223017)
   - [Amazon.de](https://www.amazon.de/dp/1793223017)
@@ -22,7 +22,7 @@ This repository contains the code examples discussed the following chapters of t
   - [Amazon.it](https://www.amazon.it/dp/1793223017)
   - [Amazon.co.jp](https://www.amazon.co.jp/dp/1793223017)
 
-## Kindle eBook
+#### Kindle eBook
   - [Amazon.com](https://www.amazon.com/dp/B07MY5Y643)
 
 ### Website
